@@ -99,6 +99,11 @@ enum DmtcpMessageType {
 
   DMT_NAME_SERVICE_GET_UNIQUE_ID,
   DMT_NAME_SERVICE_GET_UNIQUE_ID_RESPONSE,
+
+  DMT_KVDB64_GET,
+  DMT_KVDB64_GET_RESPONSE,
+  DMT_KVDB64_GET_FAILED,
+  DMT_KVDB64_OP,
 };
 
 namespace CoordCmdStatus
@@ -116,6 +121,16 @@ ostream&operator<<(ostream &o, const DmtcpMessageType &s);
 #define DMTCPMESSAGE_NUM_PARAMS         2
 #define DMTCPMESSAGE_SAME_CKPT_INTERVAL (~0u) /* default value */
 
+struct DmtcpKVDB64
+{
+  union {
+    DmtcpKVDBOperation_t op;
+    uint64_t _pad;
+  };
+  uint64_t key;
+  int64_t value;
+};
+
 // Make sure the struct is of same size on 32-bit and 64-bit systems.
 struct DmtcpMessage {
   char _magicBits[16];
@@ -123,6 +138,7 @@ struct DmtcpMessage {
   union {
     char barrier[64];
     char nsid[64];
+    char kvdbId[64];
   };
 
   uint32_t _msgSize;
@@ -152,6 +168,8 @@ struct DmtcpMessage {
 
   uint32_t uniqueIdOffset;
   uint32_t exitAfterCkpt;
+
+  struct DmtcpKVDB64 kvdb;
 
   // uint32_t padding;
 

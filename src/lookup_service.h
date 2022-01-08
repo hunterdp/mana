@@ -74,10 +74,6 @@ class KeyValue
     size_t _len;
 };
 
-#ifdef MPI
-    typedef map<KeyValue, KeyValue *>KeyValueMap;
-#endif
-
 class LookupService
 {
   public:
@@ -85,12 +81,23 @@ class LookupService
 
     ~LookupService() { reset(); }
 
-#ifdef MPI
     // FIXME:  Can we use  getUniqueId() or something instead of this?
+    typedef map<KeyValue, KeyValue *>KeyValueMap;
+    typedef map<int64_t, int64_t>KeyValueMap64;
+    typedef map<string, KeyValueMap64>::iterator MapIterator64;
+
+    typedef map<string, KeyValueMap>::iterator MapIterator;
+    // FIXME:  ConstMapIterator used to be in DMTCP-3.0.  Why was it removed?
+    //         It's needed for getMap(), which is used by MANA (for MPI)
+    typedef map<string, KeyValueMap>::const_iterator ConstMapIterator;
+
     const KeyValueMap* getMap(string name) const;
-#endif
 
     void reset();
+
+    void get64(jalib::JSocket &remote, const DmtcpMessage &msg);
+    void set64(const DmtcpMessage &msg);
+
     void registerData(const DmtcpMessage &msg, const void *data);
     void respondToQuery(jalib::JSocket &remote,
                         const DmtcpMessage &msg,
@@ -106,13 +113,6 @@ class LookupService
                          const DmtcpMessage &msg);
 
   private:
-#ifndef MPI
-    typedef map<KeyValue, KeyValue *>KeyValueMap;
-#endif
-    typedef map<string, KeyValueMap>::iterator MapIterator;
-    // FIXME:  ConstMapIterator used to be in DMTCP-3.0.  Why was it removed?
-    //         It's needed for getMap(), which is used by MANA (for MPI)
-    typedef map<string, KeyValueMap>::const_iterator ConstMapIterator;
     void addKeyValue(string id,
                      const void *key,
                      size_t keyLen,
@@ -126,6 +126,8 @@ class LookupService
 
   private:
     map<string, KeyValueMap>_maps;
+    map<string, KeyValueMap64>_maps64;
+
     map<string, uint64_t>_lastUniqueIds;
     map<string, uint64_t>_offsets;
 };

@@ -193,7 +193,7 @@ __d_bindir__dmtcp_restart_DEPENDENCIES = libdmtcpinternal.a libjalib.a \
 am___d_libdir__libdmtcp_so_OBJECTS = alarm.$(OBJEXT) \
 	ckptserializer.$(OBJEXT) dmtcpplugin.$(OBJEXT) \
 	dmtcpworker.$(OBJEXT) execwrappers.$(OBJEXT) \
-	glibcsystem.$(OBJEXT) miscwrappers.$(OBJEXT) \
+	glibcsystem.$(OBJEXT) kvdb.$(OBJEXT) miscwrappers.$(OBJEXT) \
 	plugininfo.$(OBJEXT) pluginmanager.$(OBJEXT) popen.$(OBJEXT) \
 	rlimitfloatenv.$(OBJEXT) signalwrappers.$(OBJEXT) \
 	siginfo.$(OBJEXT) syslogwrappers.$(OBJEXT) terminal.$(OBJEXT) \
@@ -617,6 +617,7 @@ __d_libdir__libdmtcp_so_SOURCES = alarm.cpp			\
 				  dmtcpworker.cpp 		\
 				  execwrappers.cpp 		\
 				  glibcsystem.cpp 		\
+				  kvdb.cpp              \
 				  miscwrappers.cpp 		\
 				  plugininfo.cpp 		\
 				  pluginmanager.cpp		\
@@ -901,6 +902,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/execwrappers.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glibcsystem.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/jalibinterface.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/kvdb.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lookup_service.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/miscwrappers.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mutex.Po@am__quote@
