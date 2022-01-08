@@ -125,6 +125,7 @@ updateLhEnviron()
   fnc(__environ);
 }
 
+#if 0
 // This is a generalization of coordinatorapi.cpp:waitForBarrier().
 query_t
 waitForMpiPresuspendBarrier(rank_state_t data_to_coord)
@@ -188,6 +189,7 @@ mpi_presuspend_barrier(rank_state_t data_to_coord)
         (data_to_coord.rank) (data_to_coord.comm) (data_to_coord.st);
   return response;
 }
+#endif
 
 static void
 mpi_plugin_event_hook(DmtcpEvent_t event, DmtcpEventData_t *data)
@@ -209,15 +211,44 @@ mpi_plugin_event_hook(DmtcpEvent_t event, DmtcpEventData_t *data)
       // * drainMpiCollective() calls preSuspendBarrier()
       // * mpi_presuspend_barrier() calls waitForMpiPresuspendBarrier()
       // FIXME:  See commant at: dmtcpplugin.cpp:'case DMTCP_EVENT_PRESUSPEND'
-      { query_t coord_response = INTENT;
+      {
+        query_t coord_response = INTENT;
+        int64_t round = 0;
         while (1) {
           // FIXME: see informCoordinator...() for the 2pc_data that we send
           //       to the coordinator.  Now, return it and use it below.
           rank_state_t data_to_coord = drainMpiCollectives(coord_response);
-          coord_response = mpi_presuspend_barrier(data_to_coord);
-          if (coord_response == SAFE_TO_CHECKPOINT) {
+
+          string barrierId = "MANA-PRESUSPEND-" + jalib::XToString(round);
+          string csId = "MANA-PRESUSPEND-CS-" + jalib::XToString(round);
+          string commId = "MANA-PRESUSPEND-COMM-" + jalib::XToString(round);
+          int64_t commKey = (int64_t) data_to_coord.comm;
+
+          if (data_to_coord.st == IN_CS) {
+            dmtcp_kvdb64(DMTCP_KVDB_INCRBY, csId, 0, 1);
+            dmtcp_kvdb64(DMTCP_KVDB_OR, commId, commKey, 1)
+          }
+
+          dmtcp_global_barrier(barrierId);
+
+          int64_t counter;
+          if (dmtcp_kvdb64_get(csId, 0, &counter) == -1) {
+            // No rank published IN_CS state.
+            coord_response == SAFE_TO_CHECKPOINT;
             break;
           }
+
+          int64_t commStatus;
+          if (dmtcp_kvdb64_get(commId, commKey, &commStatus) == -1) {
+            // No rank in our communicator is in CS; set our state to
+            // WAIT_STRAGGLER
+            coord_response = WAIT_STRAGGLER;
+          } else if (data_to_coord.st == PHASE_1) {
+            // We are in Phase 1, so we get a free pass.
+            coord_response = FREE_PASS;
+          }
+
+          round++;
         }
       }
       break;
